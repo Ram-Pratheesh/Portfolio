@@ -75,8 +75,8 @@ export default function ScrollyCanvas() {
         loadedCountRef.current += 1;
         const pct = Math.round((loadedCountRef.current / FRAME_COUNT) * 100);
         setLoadProgress(pct);
-        // Mark as loaded once we have enough frames for smooth scrubbing
-        if (loadedCountRef.current >= FRAME_COUNT * 0.5) {
+        // Mark as loaded once ALL frames are downloaded
+        if (loadedCountRef.current >= FRAME_COUNT) {
           setIsLoaded(true);
         }
       };
@@ -108,6 +108,11 @@ export default function ScrollyCanvas() {
     return () => { document.body.style.overflow = ''; };
   }, [isLoaded]);
 
+  // SVG circular progress values
+  const circleRadius = 54;
+  const circumference = 2 * Math.PI * circleRadius;
+  const strokeOffset = circumference - (loadProgress / 100) * circumference;
+
   return (
     <div ref={containerRef} className="relative h-[500vh]">
 
@@ -116,24 +121,51 @@ export default function ScrollyCanvas() {
         {!isLoaded && (
           <motion.div
             key="loader"
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center gap-6"
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
           >
-            <div className="text-3xl sm:text-5xl font-black text-white tracking-tighter">
-              RAM PRATHEESH
+            {/* Pulsing ambient glow behind the ring */}
+            <div className="absolute w-40 h-40 sm:w-56 sm:h-56 rounded-full bg-purple-600/20 blur-[60px] animate-pulse pointer-events-none" />
+
+            {/* Circular Progress Ring */}
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                {/* Background ring */}
+                <circle cx="60" cy="60" r={circleRadius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+                {/* Animated progress ring */}
+                <circle
+                  cx="60" cy="60" r={circleRadius}
+                  fill="none"
+                  stroke="url(#loaderGradient)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeOffset}
+                  style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
+                />
+                <defs>
+                  <linearGradient id="loaderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#a855f7" />
+                    <stop offset="100%" stopColor="#22d3ee" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              {/* Percentage text inside the ring */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl sm:text-3xl font-bold text-white tabular-nums">{loadProgress}<span className="text-white/30 text-lg">%</span></span>
+              </div>
             </div>
-            <div className="w-48 sm:w-64 h-1 bg-white/10 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-purple-500 to-cyan-400 rounded-full"
-                initial={{ width: '0%' }}
-                animate={{ width: `${loadProgress}%` }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-              />
-            </div>
-            <div className="text-white/40 text-sm font-light tracking-widest uppercase">
-              Loading {loadProgress}%
-            </div>
+
+            {/* Subtle tagline below */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="mt-8 text-white/30 text-xs sm:text-sm font-light tracking-[0.3em] uppercase"
+            >
+              Loading Portfolio
+            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>
