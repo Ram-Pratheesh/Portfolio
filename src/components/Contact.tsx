@@ -54,10 +54,10 @@ export default function Contact() {
           className="mb-16 text-center"
         >
           <h3 className="text-3xl sm:text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/50 tracking-tighter mb-4">
-            Let's Build Together.
+            Let&apos;s Build Together.
           </h3>
           <p className="text-lg md:text-xl text-white/50 max-w-xl mx-auto font-light">
-            Have a project in mind or want to collaborate? Drop me a message and let's create something amazing.
+            Have a project in mind or want to collaborate? Drop me a message and let&apos;s create something amazing.
           </p>
         </motion.div>
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 
 const awards = [
   {
@@ -86,15 +85,15 @@ export default function Awards() {
                       </div>
                    </div>
 
-                   {/* Actual Image (Next.js Image will gracefully fail/hide if src doesn't exist yet, showing the placeholder behind it as long as the image div doesn't block it blindly) */}
+                   {/* Actual Image */}
                    <div className="absolute inset-0 z-10 transition-transform duration-700 group-hover:scale-[1.03]">
-                     {/* We use a standard img tag here so it doesn't hard-crash the Next development server if the file is completely missing from the start */}
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
                      <img 
                        src={award.image}
                        alt={award.title}
                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100"
                        onError={(e) => {
-                          e.currentTarget.style.display = 'none'; // Hide broken image natively
+                          e.currentTarget.style.display = 'none';
                        }}
                      />
                    </div>
