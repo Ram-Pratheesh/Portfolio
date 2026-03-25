@@ -10,9 +10,12 @@ export default function ScrollyCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const lastPaintedRef = useRef(-1);
+  const loadedCountRef = useRef(0);
 
   // Track which text section is active: 0 = none, 1/2/3 = section
   const [activeSection, setActiveSection] = useState(1);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -69,6 +72,13 @@ export default function ScrollyCanvas() {
       img.decoding = 'async';
       img.onload = () => {
         if (i === 0 && lastPaintedRef.current === -1) paintFrame(0);
+        loadedCountRef.current += 1;
+        const pct = Math.round((loadedCountRef.current / FRAME_COUNT) * 100);
+        setLoadProgress(pct);
+        // Mark as loaded once we have enough frames for smooth scrubbing
+        if (loadedCountRef.current >= FRAME_COUNT * 0.5) {
+          setIsLoaded(true);
+        }
       };
       img.src = `/sequence/frame_${i.toString().padStart(3, '0')}_delay-0.066s.png`;
       images.push(img);
@@ -88,8 +98,45 @@ export default function ScrollyCanvas() {
     return () => window.removeEventListener('resize', onResize);
   }, [paintFrame]);
 
+  // Lock scrolling while frames are loading
+  useEffect(() => {
+    if (!isLoaded) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isLoaded]);
+
   return (
     <div ref={containerRef} className="relative h-[500vh]">
+
+      {/* ─── Loading Screen ─── */}
+      <AnimatePresence>
+        {!isLoaded && (
+          <motion.div
+            key="loader"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center gap-6"
+          >
+            <div className="text-3xl sm:text-5xl font-black text-white tracking-tighter">
+              RAM PRATHEESH
+            </div>
+            <div className="w-48 sm:w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-purple-500 to-cyan-400 rounded-full"
+                initial={{ width: '0%' }}
+                animate={{ width: `${loadProgress}%` }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              />
+            </div>
+            <div className="text-white/40 text-sm font-light tracking-widest uppercase">
+              Loading {loadProgress}%
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         {/* Canvas */}
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ touchAction: 'manipulation' }} />
@@ -105,7 +152,7 @@ export default function ScrollyCanvas() {
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
             </a>
             <a href="mailto:skrampratheesh@gmail.com" className="p-2 rounded-full border border-white/20 text-white/70 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all shadow-lg backdrop-blur-md">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 5.712v-9.458l4.623 3.746zm-4.141-5.929h19.035l-9.517 7.713-9.518-7.713zm5.694 7.188l3.824 3.099 3.83-3.104 5.612 6.817h-18.89l5.624-6.812zm9.201-1.464l4.623-3.761v9.484l-4.623-5.723z"/></svg>
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 5.712v-9.458l4.623 3.746zm-4.141-5.929h19.035l-9.517 7.713-9.518-7.713zm5.694 7.188l3.824 3.099 3.83-3.104 5.612 6.817h-18.89l5.624-6.812zm9.201-1.464l4.623-3.761v9.484l-4.623-5.723z" /></svg>
             </a>
             <a href="/Resume.pdf" download className="hidden sm:flex ml-2 px-4 py-2 border border-white/20 rounded-full bg-black/40 hover:bg-white hover:text-black transition-all font-semibold text-[10px] sm:text-xs tracking-[0.1em] uppercase text-white shadow-lg backdrop-blur-md items-center gap-2 group">
               <span>Download CV</span>
