@@ -80,7 +80,7 @@ export default function ScrollyCanvas() {
           setIsLoaded(true);
         }
       };
-      img.src = `/sequence/frame_${i.toString().padStart(3, '0')}_delay-0.066s.png`;
+      img.src = `/sequence/frame_${i.toString().padStart(3, '0')}_delay-0.066s.webp`;
       images.push(img);
     }
   }, [paintFrame]);
